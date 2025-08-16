@@ -1,49 +1,50 @@
-# --- Stage 1: Build client ---
-    FROM node:20-bookworm-slim AS client-build
-    WORKDIR /app/client
-    
-    RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates git \
-      && rm -rf /var/lib/apt/lists/*
-    
-    # only copy client dependencies first
-    COPY client/package.json client/package-lock.json* ./
-    RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
-    
-    # now copy the rest of the client code
-    COPY client/ ./
-    
-    #  run build using *local* package.json, no prefix, no root involvement
-    RUN npm run build
-    
-    
-    # --- Stage 2: Server runtime ---
-    FROM node:20-bookworm-slim AS server
-    WORKDIR /app
-    ENV NODE_ENV=production
-    
-    RUN apt-get update && apt-get install -y --no-install-recommends python3 build-essential ca-certificates \
-      && rm -rf /var/lib/apt/lists/*
-    
-    COPY package.json package-lock.json* ./
-    # RUN if [ -f package-lock.json ]; then npm ci --omit=dev --ignore-scripts || npm install --omit=dev --ignore-scripts; else npm install --omit=dev --ignore-scripts; fi
-    RUN npm install --omit=dev --ignore-scripts
+# ---------------------------
+# Stage 1: Build Frontend
+# ---------------------------
+  FROM node:18-alpine AS client-builder
 
-    
-    # App source
-    COPY app.js ./
-    COPY middleware ./middleware
-    COPY models ./models
-    COPY routes ./routes
-    COPY docs ./docs
-    COPY scripts ./scripts
-    COPY create_user.js ./
-    
-    # Copy client build output
-    COPY --from=client-build /app/client/dist ./client-dist
-    
-    RUN apt-get purge -y python3 build-essential && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
-    
-    USER node
-    EXPOSE 4000
-    CMD ["node", "app.js"]
-    
+  WORKDIR /app/client
+  
+  # Copy client package files and install deps
+  COPY client/package*.json ./
+  RUN npm install --legacy-peer-deps
+  
+  # Copy client source and build
+  COPY client/ .
+  RUN npm run build
+  
+  
+  # ---------------------------
+  # Stage 2: Build Backend
+  # ---------------------------
+  FROM node:18-alpine AS server-builder
+  
+  WORKDIR /app/web
+  
+  # Copy backend package files and install deps
+  COPY package*.json ./
+  RUN npm install --production --legacy-peer-deps
+  
+  # Copy backend source
+  COPY . .
+  
+  # Copy built frontend into backend's static folder
+  COPY --from=client-builder /app/client/dist ./client-dist
+  
+  
+  # ---------------------------
+  # Stage 3: Production Image
+  # ---------------------------
+  FROM node:18-alpine
+  
+  WORKDIR /app
+  
+  # Copy server with frontend build
+  COPY --from=server-builder /app/web .
+  
+  # Expose backend port
+  EXPOSE 3000
+  
+  # Start backend (app.js in /web)
+  CMD ["node", "app.js"]
+  
