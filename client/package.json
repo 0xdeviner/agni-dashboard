@@ -1,43 +1,28 @@
 {
-    "name": "agni-dashboard",
+    "name": "agni-dashboard-client",
     "version": "1.0.0",
     "private": true,
-    "description": "Single-app Agni Recon Dashboard (Express API + React frontend)",
-    "main": "app.js",
+    "type": "module",
     "scripts": {
-        "postinstall": "npm --prefix client install",
-        "dev:server": "nodemon app.js",
-        "dev:client": "npm --prefix client run dev -- --host --port 5173",
-        "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
-        "build:client": "npm --prefix client run build",
-        "build": "npm run build:client",
-        "start": "node app.js",
-        "create:user": "node create_user.js",
-        "create:indexes": "node scripts/create-indexes.js"
+      "dev": "vite",
+      "build": "vite build",
+      "preview": "vite preview --port 5174"
     },
     "dependencies": {
-        "@emotion/react": "^11.14.0",
-        "@emotion/styled": "^11.14.1",
-        "@mui/icons-material": "^7.3.1",
-        "@mui/material": "^7.3.1",
-        "axios": "^1.11.0",
-        "bcrypt": "^5.1.1",
-        "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
-        "express": "^4.19.2",
-        "jsonwebtoken": "^9.0.2",
-        "mongodb": "^5.9.2",
-        "morgan": "^1.10.0",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "react-router-dom": "^6.22.3",
-        "recharts": "^3.1.2",
-        "swagger-ui-express": "^5.0.1"
+      "@emotion/react": "^11.13.3",
+      "@emotion/styled": "^11.13.0",
+      "@mui/icons-material": "^5.16.7",
+      "@mui/material": "^5.16.7",
+      "axios": "^1.7.7",
+      "dayjs": "^1.11.13",
+      "react": "^18.3.1",
+      "react-dom": "^18.3.1",
+      "react-router-dom": "^6.26.2",
+      "recharts": "^2.12.7"
     },
     "devDependencies": {
-        "@vitejs/plugin-react": "^5.0.0",
-        "concurrently": "^9.0.1",
-        "nodemon": "^3.1.0",
-        "vite": "^7.1.2"
+      "@vitejs/plugin-react": "^4.3.1",
+      "vite": "^5.4.3"
     }
-}
+  }
+  
