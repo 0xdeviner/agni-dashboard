@@ -1,0 +1,26 @@
+{
+  "name": "agni-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "postinstall": "node -e \"const fs=require('fs'); if(process.env.NODE_ENV==='production'||!fs.existsSync('client/package.json')) process.exit(0)\" && npm --prefix client install",
+    "dev:server": "nodemon app.js",
+    "dev:client": "npm --prefix client run dev -- --host --port 5173",
+    "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+    "build:client": "npm --prefix client run build",
+    "build": "npm run build:client",
+    "start": "node app.js",
+    "create:user": "node create_user.js",
+    "create:indexes": "node scripts/create-indexes.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.18.0",
+    "morgan": "^1.10.1",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
