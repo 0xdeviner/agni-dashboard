@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "postinstall": "node -e \"const fs=require('fs'); if(process.env.NODE_ENV==='production'||!fs.existsSync('client/package.json')) process.exit(0)\" && npm --prefix client install",
     "dev:server": "nodemon app.js",
     "dev:client": "npm --prefix client run dev -- --host --port 5173",
     "dev": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
