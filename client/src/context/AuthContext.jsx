@@ -11,6 +11,7 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     setLoading(true);
     try {
+      // baseURL '/api' => POST /api/auth/login
       const res = await api.post('/auth/login', { username, password });
       localStorage.setItem('token', res.data.token);
       setToken(res.data.token);
@@ -28,6 +29,7 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({ token, isAuthenticated, login, logout, loading }), [token, isAuthenticated, loading]);
 
   useEffect(() => {
+    // baseURL '/api' => GET /api/health
     api.get('/health').catch(() => {});
   }, []);
 

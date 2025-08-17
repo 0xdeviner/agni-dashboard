@@ -23,7 +23,7 @@ const app = express();
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('dev'));
 
-// CORS: Dev-friendly. In production same-origin, so this is benign.
+// CORS: Dev-friendly. In production same-origin or set CORS_ORIGIN
 const corsEnv = process.env.CORS_ORIGIN;
 let corsOrigin;
 if (!corsEnv || corsEnv.trim() === '*' || corsEnv.trim() === '') {
@@ -31,17 +31,12 @@ if (!corsEnv || corsEnv.trim() === '*' || corsEnv.trim() === '') {
 } else {
   corsOrigin = corsEnv.split(',').map((s) => s.trim()).filter(Boolean);
 }
-app.use(
-  cors({
-    origin: corsOrigin,
-    credentials: false
-  })
-);
+app.use(cors({ origin: corsOrigin, credentials: false }));
 
-// Health check
-app.get('/health', (req, res) => res.json({ ok: true }));
+// Health check: support both /health and /api/health
+app.get(['/health', '/api/health'], (req, res) => res.json({ ok: true }));
 
-// Swagger (keep before static)
+// Swagger
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { explorer: true }));
 app.get('/docs.json', (req, res) => res.json(swaggerDocument));
 
@@ -86,15 +81,16 @@ MongoClient.connect(MONGO_URI)
     // Optional debug endpoint
     app.get('/api/_debug/db', (req, res) => res.json({ dbName: app.locals.dbName }));
 
-    // API routes
+    // Routes
     app.use('/auth', authRoutes);
+    app.use('/api/auth', authRoutes); // alias so '/api/auth/login' works when baseURL='/api'
     app.use('/api', apiRoutes);
 
-    // In production, serve the React build (client-dist folder)
-    const clientDist = path.join(__dirname, 'client-dist');
+    // Serve the React build (Vite output)
+    const clientDist = path.join(__dirname, 'client', 'dist');
     app.use(express.static(clientDist));
 
-    // SPA fallback (after API/Swagger routes)
+    // SPA fallback
     app.get('*', (req, res) => {
       const p = req.path;
       if (p.startsWith('/api') || p.startsWith('/auth') || p.startsWith('/docs') || p.startsWith('/docs.json') || p.startsWith('/health')) {

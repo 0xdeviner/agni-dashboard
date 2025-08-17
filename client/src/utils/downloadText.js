@@ -7,3 +7,6 @@ export function downloadText(filename, text) {
     a.click();
     URL.revokeObjectURL(url);
   }
+
+
+// export { downloadText } from './downloadText';

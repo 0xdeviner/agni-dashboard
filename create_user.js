@@ -39,7 +39,8 @@ async function main() {
   }
 
   const password_hash = await bcrypt.hash(password, 10);
-  await User.createUser(username, password_hash);
+  // Use the model's create(user) API
+  await User.create({ username, password_hash });
   console.log(`User "${username}" created successfully.`);
 
   await client.close();

@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import {
-  Paper, Typography, Grid, TextField, FormControlLabel, Switch, Button,
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Chip
+  Paper, Grid, Typography, TextField, Button, Table, TableBody, TableCell, TableContainer,
+  TableHead, TableRow, TablePagination, Chip, FormControlLabel, Switch
 } from '@mui/material';
 import { downloadText } from '../utils/downloadText';
 
@@ -10,29 +10,35 @@ export default function Subdomains() {
   const [domain, setDomain] = useState('');
   const [sub, setSub] = useState('');
   const [q, setQ] = useState('');
+  const [status, setStatus] = useState('');
   const [isAlive, setIsAlive] = useState(false);
   const [hasTakeover, setHasTakeover] = useState(false);
-  const [status, setStatus] = useState('');
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(20);
+  const [error, setError] = useState('');
 
   const params = useMemo(() => ({
+    page: page + 1, limit,
     domain: domain || undefined,
     subdomain: sub || undefined,
     q: q || undefined,
-    status_code: status || undefined,
     is_alive: isAlive ? 'true' : undefined,
     has_takeover: hasTakeover ? 'true' : undefined,
-    page: page + 1,
-    limit
-  }), [domain, sub, q, status, isAlive, hasTakeover, page, limit]);
+    status_code: status || undefined
+  }), [page, limit, domain, sub, q, isAlive, hasTakeover, status]);
 
   const search = async () => {
-    const res = await api.get('/api/subdomains', { params }).then(r => r.data);
-    setRows(res.items);
-    setTotal(res.total);
+    try {
+      // baseURL '/api' => GET /api/subdomains
+      const res = await api.get('/subdomains', { params }).then(r => r.data);
+      setRows(res.items);
+      setTotal(res.total);
+      setError('');
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to load subdomains');
+    }
   };
 
   useEffect(() => { search(); }, [page, limit]);
@@ -40,7 +46,7 @@ export default function Subdomains() {
   const onApplyFilters = () => { setPage(0); search(); };
 
   const doExport = async () => {
-    const res = await api.get('/api/export/subdomains', {
+    const res = await api.get('/export/subdomains', {
       params: { domain: domain || undefined, is_alive: isAlive ? 'true' : undefined, has_takeover: hasTakeover ? 'true' : undefined },
       responseType: 'text'
     });
@@ -50,6 +56,7 @@ export default function Subdomains() {
   return (
     <Paper elevation={2} sx={{ p: 2 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>Search Subdomains</Typography>
+      {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12} md={3}>
@@ -66,6 +73,8 @@ export default function Subdomains() {
         </Grid>
         <Grid item xs={12} md={4}>
           <FormControlLabel control={<Switch checked={isAlive} onChange={(e) => setIsAlive(e.target.checked)} />} label="Alive only" />
+        </Grid>
+        <Grid item xs={12} md={4}>
           <FormControlLabel control={<Switch checked={hasTakeover} onChange={(e) => setHasTakeover(e.target.checked)} />} label="Has takeover" />
         </Grid>
         <Grid item xs={12} md={8} sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>

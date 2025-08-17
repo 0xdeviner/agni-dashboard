@@ -1,58 +1,65 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
-import { Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Chip } from '@mui/material';
+import {
+  Paper,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination,
+  Typography, Chip, Button
+} from '@mui/material';
+import { downloadText } from '../utils/downloadText';
 
 export default function Takeovers() {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [limit, setLimit] = useState(20);
+  const [error, setError] = useState('');
 
   const load = async () => {
-    const res = await api.get('/api/takeovers', { params: { page: page + 1, limit } }).then(r => r.data);
-    setRows(res.items);
-    setTotal(res.total);
+    try {
+      const res = await api.get('/takeovers', { params: { page: page + 1, limit } }).then(r => r.data);
+      setRows(res.items);
+      setTotal(res.total);
+      setError('');
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to load takeovers');
+    }
   };
 
   useEffect(() => { load(); }, [page, limit]);
 
+  const doExport = async () => {
+    const res = await api.get('/export/takeovers', { responseType: 'text' });
+    downloadText('takeovers.txt', res.data);
+  };
+
   return (
     <Paper elevation={2} sx={{ p: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2 }}>Potential Takeovers</Typography>
-
+      <Typography variant="h6" sx={{ mb: 2 }}>Takeovers</Typography>
+      {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
+      <Button variant="outlined" onClick={doExport} sx={{ mb: 2 }}>Export</Button>
       <TableContainer>
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Domain</TableCell>
               <TableCell>Subdomain</TableCell>
+              <TableCell>Domain</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Title</TableCell>
-              <TableCell>CDN</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((s) => {
-              const status = s?.alive_data?.status_code;
-              const title = s?.alive_data?.title;
-              const cdn = s?.alive_data?.cdn_name;
-              return (
-                <TableRow key={s._id} hover>
-                  <TableCell>{s.domain}</TableCell>
-                  <TableCell>{s.subdomain}</TableCell>
-                  <TableCell>{status ? <Chip size="small" label={status} /> : '-'}</TableCell>
-                  <TableCell>{title || '-'}</TableCell>
-                  <TableCell>{cdn || '-'}</TableCell>
-                </TableRow>
-              );
-            })}
+            {rows.map((s) => (
+              <TableRow key={s._id} hover>
+                <TableCell>{s.subdomain}</TableCell>
+                <TableCell>{s.domain}</TableCell>
+                <TableCell>{s.takeover ? <Chip size="small" label="Yes" color="secondary" /> : 'No'}</TableCell>
+              </TableRow>
+            ))}
             {rows.length === 0 && (
-              <TableRow><TableCell colSpan={5}>No takeovers found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={3}>No takeovers.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
-
       <TablePagination
         component="div"
         count={total}

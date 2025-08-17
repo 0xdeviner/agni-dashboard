@@ -1,21 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Grid, Paper, Typography, Box, List, ListItem, ListItemText, Chip } from '@mui/material';
 import { api } from '../api/client';
+import { Grid, Paper, Typography, List, ListItem, ListItemText, Chip, Box } from '@mui/material';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
 import StatCard from '../components/StatCard';
-import { PieChart, Pie, Cell, Tooltip as RTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-
-const COLORS = ['#00bcd4', '#263238', '#7c4dff', '#26a69a'];
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [recent, setRecent] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     (async () => {
-      const s = await api.get('/api/stats').then(r => r.data);
-      setStats(s);
-      const rec = await api.get('/api/recent?limit=10').then(r => r.data);
-      setRecent(rec);
+      try {
+        // baseURL handles '/api'
+        const s = await api.get('/stats').then(r => r.data);
+        setStats(s);
+        const rec = await api.get('/recent', { params: { limit: 10 } }).then(r => r.data);
+        setRecent(rec);
+      } catch (e) {
+        setError(e?.response?.data?.error || 'Failed to load dashboard');
+      }
     })();
   }, []);
 
@@ -31,6 +35,12 @@ export default function Dashboard() {
 
   return (
     <Grid container spacing={2}>
+      {error && (
+        <Grid item xs={12}>
+          <Paper elevation={2} sx={{ p: 2, color: 'error.main' }}>{error}</Paper>
+        </Grid>
+      )}
+
       <Grid item xs={12} md={3}><StatCard title="Domains" value={stats?.domains ?? '—'} /></Grid>
       <Grid item xs={12} md={3}><StatCard title="Subdomains" value={stats?.subdomains ?? '—'} /></Grid>
       <Grid item xs={12} md={3}><StatCard title="Alive Subdomains" value={stats?.live_subdomains ?? '—'} /></Grid>
@@ -42,9 +52,9 @@ export default function Dashboard() {
           <ResponsiveContainer width="100%" height="90%">
             <PieChart>
               <Pie dataKey="value" data={pieData} cx="50%" cy="50%" outerRadius={120} label>
-                {pieData.map((entry, index) => <Cell key={index} fill={COLORS[index % COLORS.length]} />)}
+                <Cell key="alive" fill="#00c853" />
+                <Cell key="dead" fill="#263238" />
               </Pie>
-              <RTooltip />
             </PieChart>
           </ResponsiveContainer>
         </Paper>
@@ -52,14 +62,13 @@ export default function Dashboard() {
 
       <Grid item xs={12} md={6}>
         <Paper elevation={2} sx={{ p: 2, height: 360 }}>
-          <Typography variant="subtitle1" sx={{ mb: 1 }}>Totals</Typography>
+          <Typography variant="subtitle1" sx={{ mb: 1 }}>Counts</Typography>
           <ResponsiveContainer width="100%" height="90%">
             <BarChart data={barData}>
-              <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} />
               <XAxis dataKey="name" />
               <YAxis />
-              <RTooltip />
-              <Bar dataKey="count" fill="#00bcd4" radius={[6, 6, 0, 0]} />
+              <Tooltip />
+              <Bar dataKey="count" fill="#26a69a" />
             </BarChart>
           </ResponsiveContainer>
         </Paper>

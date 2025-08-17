@@ -15,12 +15,14 @@ export default function Domains() {
   const [limit, setLimit] = useState(20);
 
   const load = async () => {
-    const res = await api.get('/api/domains', { params: { page: page + 1, limit } }).then(r => r.data);
+    const res = await api.get('/domains', { params: { page: page + 1, limit } }).then(r => r.data);
+    console.log("Domain Response", res)
     setRows(res.items);
     setTotal(res.total);
   };
 
-  useEffect(() => { load(); }, [page, limit]);
+  useEffect(() => { console.log("Initiating Domain")
+    load(); }, [page, limit]);
 
   return (
     <Paper elevation={2} sx={{ p: 2 }}>

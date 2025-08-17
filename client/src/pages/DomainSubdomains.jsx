@@ -15,6 +15,7 @@ export default function DomainSubdomains() {
   const [limit, setLimit] = useState(20);
   const [isAlive, setIsAlive] = useState(false);
   const [hasTakeover, setHasTakeover] = useState(false);
+  const [error, setError] = useState('');
 
   const params = useMemo(() => ({
     page: page + 1, limit,
@@ -23,15 +24,21 @@ export default function DomainSubdomains() {
   }), [page, limit, isAlive, hasTakeover]);
 
   const load = async () => {
-    const res = await api.get(`/api/domains/${encodeURIComponent(domain)}/subdomains`, { params }).then(r => r.data);
-    setRows(res.items);
-    setTotal(res.total);
+    try {
+      // baseURL '/api' => GET /api/domains/:domain/subdomains
+      const res = await api.get(`/domains/${encodeURIComponent(domain)}/subdomains`, { params }).then(r => r.data);
+      setRows(res.items);
+      setTotal(res.total);
+      setError('');
+    } catch (e) {
+      setError(e?.response?.data?.error || 'Failed to load subdomains');
+    }
   };
 
   useEffect(() => { load(); }, [domain, page, limit, isAlive, hasTakeover]);
 
   const doExport = async () => {
-    const res = await api.get('/api/export/subdomains', {
+    const res = await api.get('/export/subdomains', {
       params: { domain, is_alive: isAlive ? 'true' : undefined, has_takeover: hasTakeover ? 'true' : undefined },
       responseType: 'text'
     });
@@ -48,6 +55,8 @@ export default function DomainSubdomains() {
           <Button onClick={doExport}>Export TXT</Button>
         </Stack>
       </Stack>
+
+      {error && <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>}
 
       <TableContainer>
         <Table size="small">
