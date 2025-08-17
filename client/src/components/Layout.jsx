@@ -9,7 +9,7 @@ import PublicIcon from '@mui/icons-material/Public';
 import LanIcon from '@mui/icons-material/Lan';
 import SecurityIcon from '@mui/icons-material/Security';
 import LogoutIcon from '@mui/icons-material/Logout';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const drawerWidth = 240;
@@ -34,7 +34,7 @@ export default function Layout({ children }) {
           <IconButton color="inherit" edge="start" onClick={() => setOpen(!open)} sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1, pl: 75 }}>
             Agni Recon Dashboard
           </Typography>
           <Tooltip title="Logout">
@@ -71,7 +71,7 @@ export default function Layout({ children }) {
 
       <Box component="main" sx={{ flexGrow: 1, p: 3, ml: open ? `${drawerWidth}px` : 0, transition: 'margin .2s ease' }}>
         <Toolbar />
-        {children}
+          <Outlet/>
       </Box>
     </Box>
   );
